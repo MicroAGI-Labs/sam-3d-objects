@@ -1,0 +1,65 @@
+# SAM 3D Objects — slim SERVE-runtime dependency set (MicroAGI Blackwell port).
+#
+# Single source of truth for the pure-pip deps the inference server installs. It
+# is the subset of requirements.txt actually needed to LOAD + SERVE the pipeline.
+# Upstream's requirements.txt is the TRAINING/dev set (~90 pkgs: bpy/Blender,
+# sagemaker, wandb, mosaicml-streaming, auto_gptq, bitsandbytes, jupyter, pytest,
+# hdfs, pymongo, decord, …) — heavy, and some are cu121-era CUDA builds that won't
+# compile on cu130 — so the server image installs THIS file instead. (Upstream's
+# requirements.inference.txt is a different thing: 4 GUI/extras lines layered on
+# top of the full requirements.txt, incl. gradio + the broken kaolin placeholder.)
+#
+# NOT here — installed explicitly in the research-infra Dockerfile because they
+# need --index-url / --extra-index-url / source builds, not flat pip lines:
+#   numpy<2 (must precede torch), torch/torchvision/torchaudio (cu130 index),
+#   cumm-cu130 + spconv-cu130 (rathaROG extra-index), pytorch3d (source),
+#   gsplat (source/JIT), kaolin (source from master), MoGe (git).
+#
+# Versions are intentionally loose: this mirrors the set verified running on the
+# RTX PRO 6000 (sm_120) on 2026-06-17. Tighten to a pip-freeze of that image if
+# byte-reproducibility is ever needed.
+
+# config / orchestration
+omegaconf
+hydra-core
+hydra-colorlog
+rootutils
+loguru
+
+# tensor / model utils
+einops
+einops-exts
+timm
+optree            # sam3d_objects.data.utils imports it at module load
+astor             # sparse/attention config codegen
+easydict          # sparse/attention configs
+lightning         # LightningModule bases on the pipeline import path
+
+# image / geometry / mesh
+opencv-python-headless
+scikit-image
+imageio
+trimesh
+utils3d
+roma
+smplx
+point-cloud-utils
+pymeshfix
+xatlas
+open3d
+pyvista           # mesh/graph postprocess utils, imported at pipeline construction
+igraph
+
+# plotting (pulled in by viz utils on the import path)
+seaborn
+matplotlib
+pillow
+
+# weights io
+huggingface_hub
+safetensors
+
+# server
+fastapi
+uvicorn[standard]
+python-multipart

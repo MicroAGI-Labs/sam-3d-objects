@@ -15,6 +15,16 @@
 >   explicit.
 > - torch/torchvision/torchaudio install from the **cu130** index; `pytorch3d` and `gsplat` are
 >   source/JIT-built with `TORCH_CUDA_ARCH_LIST=12.0`.
+> - **kaolin** is a hard dep too — `representations/mesh/flexicubes/flexicubes.py` imports
+>   `kaolin.utils.testing` on the pipeline import path, so the pipeline won't load without it.
+>   The PyPI `kaolin` is only a placeholder wheel that raises on import, and NVIDIA ships no
+>   cu130 wheel (newest prebuilt is `torch-2.8.0_cu129`), so it is **built from `master`**
+>   (already cu13/Blackwell-aware: `TORCH_MAX_VER=2.10.0`, default arch includes `12.0+PTX`).
+>   The build needs `setuptools<80` (its `setup.py` imports `pkg_resources`) and
+>   `CUB_HOME=/usr/local/cuda/include/cccl` (CUDA 13 relocated cub/thrust under `cccl/`).
+> - The server installs the slim **`requirements.serve.txt`** (this fork) rather than the full
+>   `requirements.txt`, which is the upstream training/dev set (bpy, sagemaker, wandb,
+>   auto_gptq, …) — most of it irrelevant to inference and some uncompilable on cu130.
 >
 > The runnable artifact is the container in MicroAGI-Labs/research-infra at
 > `apps/cluster/workloads/sam-3d-objects/` — this repo is consumed there as a submodule.
