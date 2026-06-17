@@ -1,2 +1,6 @@
+# MicroAGI Blackwell port: flash_attn dropped. The attention backend defaults
+# to "sdpa" and only switches to flash_attn on A100/H100/H200 (see
+# pipeline/inference_pipeline.py:set_attention_backend); on RTX PRO 6000
+# (sm_120) it stays on sdpa, so flash_attn is never imported and its cu121
+# wheel (no sm_120 kernels) is unnecessary.
 pytorch3d @ git+https://github.com/facebookresearch/pytorch3d.git@75ebeeaea0908c5527e7b1e305fbc7681382db47
-flash_attn==2.8.3
