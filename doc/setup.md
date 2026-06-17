@@ -1,5 +1,24 @@
 # Setup
 
+> **MicroAGI Blackwell fork note.** This branch (`microagi-blackwell`) is patched to run on
+> NVIDIA Blackwell GPUs (RTX PRO 6000, `sm_120`) with **CUDA 13.0**, instead of the upstream
+> torch 2.5.1 / CUDA 12.1 pin (whose wheels have no `sm_120` kernels). Changes are
+> dependency-only — no model/inference logic was touched:
+> - **spconv** (a hard inference dep — `SparseConv3d` runs in `structured_latent_flow.py` and
+>   `structured_latent_vae/decoder_mesh.py`) is swapped from `spconv-cu121==2.3.8` to the
+>   **rathaROG** prebuilt `cumm-cu130` + `spconv-cu130` wheels, which ship `sm_120+PTX`
+>   (`--extra-index-url https://ratharog.github.io/cumm-spconv/`). Fallback: source-build with
+>   `CUMM_CUDA_ARCH_LIST='...;12.0;12.1' CUMM_DISABLE_JIT=1 SPCONV_DISABLE_JIT=1`.
+> - **flash-attn** and **xformers** are dropped — they are optional attention backends, and
+>   `set_attention_backend()` only selects `flash_attn` on A100/H100/H200; on `sm_120` the
+>   default `sdpa` backend is used. Set `ATTN_BACKEND=sdpa` / `SPARSE_ATTN_BACKEND=sdpa` to be
+>   explicit.
+> - torch/torchvision/torchaudio install from the **cu130** index; `pytorch3d` and `gsplat` are
+>   source/JIT-built with `TORCH_CUDA_ARCH_LIST=12.0`.
+>
+> The runnable artifact is the container in MicroAGI-Labs/research-infra at
+> `apps/cluster/workloads/sam-3d-objects/` — this repo is consumed there as a submodule.
+
 ## Prerequisites
 
 * A linux 64-bits architecture (i.e. `linux-64` platform in `mamba info`).
